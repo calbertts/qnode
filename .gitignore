@@ -1,3 +1,8 @@
 *.out
+.obj
 .DS_Store
 quickjs-2019-07-09_bkp
+Session.vim
+.undodir
+node_test
+examples
