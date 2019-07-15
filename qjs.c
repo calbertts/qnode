@@ -1,6 +1,6 @@
 /*
  * QuickJS stand alone interpreter
- * 
+ *
  * Copyright (c) 2017-2018 Fabrice Bellard
  * Copyright (c) 2017-2018 Charlie Gordon
  *
@@ -70,7 +70,7 @@ static int eval_file(JSContext *ctx, const char *filename, int eval_flags)
     uint8_t *buf;
     int ret;
     size_t buf_len;
-    
+
     buf = js_load_file(ctx, &buf_len, filename);
     if (!buf) {
         perror(filename);
@@ -281,7 +281,7 @@ int main(int argc, char **argv)
         load_jscalc = !strcmp(exename, "qjscalc");
     }
 #endif
-    
+
     /* cannot use getopt because we want to pass the command line to
        the script */
     optind = 1;
@@ -376,7 +376,7 @@ int main(int argc, char **argv)
 
     /* loader for ES6 modules */
     JS_SetModuleLoaderFunc(rt, NULL, js_module_loader, NULL);
-                           
+
     if (!empty_run) {
 #ifdef CONFIG_BIGNUM
         if (load_jscalc) {
@@ -384,6 +384,7 @@ int main(int argc, char **argv)
         }
 #endif
         js_std_add_helpers(ctx, argc - optind, argv + optind);
+        //js_path_add_helpers(ctx, argc - optind, argv + optind);
 
         /* system modules */
         js_init_module_std(ctx, "std");
@@ -423,7 +424,7 @@ int main(int argc, char **argv)
         }
         js_std_loop(ctx);
     }
-    
+
     if (dump_memory) {
         JSMemoryUsage stats;
         JS_ComputeMemoryUsage(rt, &stats);

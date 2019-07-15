@@ -43,3 +43,7 @@ Find out more here https://bellard.org/quickjs/
 - `process.platform`
 - `process.cwd()`
 - `process.argv`
+- `process.EOL`
+
+## Path global object
+- `path.basename(...)`

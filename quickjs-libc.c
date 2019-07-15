@@ -35,6 +35,7 @@
 #include <time.h>
 #include <signal.h>
 #include <limits.h>
+#include <libgen.h>
 #if defined(_WIN32)
 #include <windows.h>
 #include <conio.h>
@@ -1621,12 +1622,16 @@ static int js_os_poll(JSContext *ctx)
 
 #if defined(_WIN32)
 #define OS_PLATFORM "win32"
+#define EOL "\\r\\n"
 #elif defined(__APPLE__)
 #define OS_PLATFORM "darwin"
+#define EOL "\\n"
 #elif defined(EMSCRIPTEN)
 #define OS_PLATFORM "js"
+#define EOL "\\n"
 #else
 #define OS_PLATFORM "linux"
+#define EOL "\\n"
 #endif
 
 #define OS_FLAG(x) JS_PROP_INT32_DEF(#x, x, JS_PROP_CONFIGURABLE )
@@ -1741,9 +1746,22 @@ static JSValue js_process_cwd(JSContext *ctx, JSValueConst this_val, int argc, J
     }
 }
 
+static JSValue js_path_basename(JSContext *ctx, JSValueConst this_val, int argc, JSValueConst *argv)
+{
+    const char *path;
+    char *basenameStr;
+
+    path = JS_ToCString(ctx, argv[0]);
+    basenameStr = basename(strdup(path));
+    if (!basenameStr) {
+        return JS_EXCEPTION;
+    }
+    return JS_NewString(ctx, basenameStr);
+}
+
 void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
 {
-    JSValue global_obj, console, args, args2, process;
+    JSValue global_obj, console, args, args2, process, path;
     int i;
 
     /* XXX: should these global definitions be enumerable? */
@@ -1752,7 +1770,7 @@ void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
     console = JS_NewObject(ctx);
     JS_SetPropertyStr(ctx, console, "log", JS_NewCFunction(ctx, js_print, "log", 1));
     JS_SetPropertyStr(ctx, console, "error", JS_NewCFunction(ctx, js_print_error, "error", 1));
-    JS_SetPropertyStr(ctx, console, "warn", JS_NewCFunction(ctx, js_print_error, "error", 1));
+    JS_SetPropertyStr(ctx, console, "warn", JS_NewCFunction(ctx, js_print_error, "warn", 1));
     JS_SetPropertyStr(ctx, global_obj, "console", console);
 
     /* same methods as the mozilla JS shell */
@@ -1773,7 +1791,12 @@ void js_std_add_helpers(JSContext *ctx, int argc, char **argv)
     JS_SetPropertyStr(ctx, process, "argv", args2);
     JS_SetPropertyStr(ctx, process, "cwd", JS_NewCFunction(ctx, js_process_cwd, "cwd", 1));
     JS_SetPropertyStr(ctx, process, "platform", JS_NewString(ctx, OS_PLATFORM));
+    JS_SetPropertyStr(ctx, process, "EOL", JS_NewString(ctx, EOL));
     JS_SetPropertyStr(ctx, global_obj, "process", process);
+
+    path = JS_NewObject(ctx);
+    JS_SetPropertyStr(ctx, path, "basename", JS_NewCFunction(ctx, js_path_basename, "basename", 1));
+    JS_SetPropertyStr(ctx, global_obj, "path", path);
 
     JS_FreeValue(ctx, global_obj);
 
